@@ -17,6 +17,7 @@ import javax.swing.event.ChangeListener;
 
 import cair.graph.Graph;
 import cair.graph.SeamCarving;
+import cair.image.Image;
 
 public class Frame extends JFrame {
 
@@ -124,8 +125,8 @@ public class Frame extends JFrame {
 						try {
 							int[][] image, interest;
 							Graph graph;
-							image = SeamCarving.readpgm(Paths.get(inputName));
-							if (SeamCarving.getWidth(image) < SeamCarving.MIN_WIDTH || SeamCarving.getHeight(image) < SeamCarving.MIN_HEIGHT) {
+							image = Image.read(Paths.get(inputName));
+							if (Image.getWidth(image) < Image.MIN_WIDTH || Image.getHeight(image) < Image.MIN_HEIGHT) {
 								setSize(new Dimension(320, 218));
 								contentPane.remove(progress);
 								contentPane.repaint();
@@ -136,7 +137,7 @@ public class Frame extends JFrame {
 								slider.setEnabled(true);
 								input.setText("");
 								output.setText("");
-								JOptionPane.showMessageDialog(null, "L'image doit etre de dimension superieur a " + SeamCarving.MIN_HEIGHT + "x" + SeamCarving.MIN_WIDTH, "Erreur", JOptionPane.ERROR_MESSAGE);
+								JOptionPane.showMessageDialog(null, "L'image doit etre de dimension superieur a " + Image.MIN_HEIGHT + "x" + Image.MIN_WIDTH, "Erreur", JOptionPane.ERROR_MESSAGE);
 								return;
 							}
 							// Here algorithm to remove pixels
@@ -146,7 +147,7 @@ public class Frame extends JFrame {
 								image = SeamCarving.removePixels(image, SeamCarving.fordFulkerson(graph));
 								progress.increment();
 							}
-							SeamCarving.writepgm(image, output.getText() + '.' + SeamCarving.EXTENSION);
+							Image.write(image, output.getText() + '.' + Image.EXTENSION);
 						} catch (IOException e) {
 							e.printStackTrace();
 						}

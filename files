@@ -1,6 +1,7 @@
 src/cair/graph/Graph.java 
 src/cair/graph/Edge.java 
 src/cair/graph/SeamCarving.java 
+src/cair/image/Image.java 
 src/cair/gui/FileChooser.java
 src/cair/gui/Frame.java
 src/cair/gui/Label.java

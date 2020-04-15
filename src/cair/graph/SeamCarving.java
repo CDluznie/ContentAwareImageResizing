@@ -1,28 +1,18 @@
 package cair.graph;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Scanner;
+
+import cair.image.Image;
 
 /**
  * All the method to perform the content aware image resizing
  **/
 public abstract class SeamCarving {
 
-	/**
-	 * Processed format file
-	 **/
-	public static String EXTENSION = "pgm";
-	
 	/**
 	 * Constant defining the value +&infin; in files
 	 **/
@@ -34,95 +24,6 @@ public abstract class SeamCarving {
 	public static int BFS_PARENT_NONE = -1;
 	
 	/**
-	 * Smallest possible image width
-	 **/
-	public static int MIN_WIDTH = 60;
-	
-	/**
-	 * Smallest possible image height
-	 **/
-	public static int MIN_HEIGHT = 60;
-	
-	/**
-	 * Return the height of the image
-	 * @param image Input image
-	 * @return the height of the image
-	 * @see SeamCarving#getWidth
-	 **/
-	public static int getHeight(int[][] image) {
-		return image.length;
-	}
-
-	/**
-	 * Return the width of the image
-	 * @param image Input image
-	 * @return the width of the image
-	 * @see SeamCarving#getHeight
-	 **/
-	public static int getWidth(int[][] image) {
-		return image[0].length;
-	}
-	
-	/**
-	 * Get an array containing the image of a pgm file
-	 * @param path Path to the input file
-	 * @return the array containing the image
-	 * @throws IOException Input/Output error
-	 * @see SeamCarving#writepgm
-	 **/
-	public static int[][] readpgm(Path path) throws IOException {
-		try(BufferedReader reader = Files.newBufferedReader(path)) {
-			reader.readLine();
-			String line = reader.readLine();
-			while (line.startsWith("#")) {
-				line = reader.readLine();
-			}
-			Scanner scanner = new Scanner(line);
-			int width = scanner.nextInt();
-			int height = scanner.nextInt();
-			line = reader.readLine();
-			scanner = new Scanner(line);
-			scanner.nextInt();
-			int[][] im = new int[height][width];
-			scanner = new Scanner(reader);
-			int count = 0;
-			while (count < height * width) {
-				im[count / width][count % width] = scanner.nextInt();
-				count++;
-			}
-			return im;
-		}
-	}
-	
-	/**
-	 * Save the color array as a pgm file
-	 * @param image Input image
-	 * @param filename Ouput file name
-	 * @throws IOException Input/Output error
-	 * @see SeamCarving#readpgm
-	 **/
-	public static void writepgm(int[][] image, String filename) throws IOException {
-		int width = getWidth(image), height = getHeight(image);
-		FileWriter fw = new FileWriter(new File (filename));
-		fw.write("P2");
-		fw.write('\n');
-		fw.write(String.valueOf(width));
-		fw.write(' ');
-		fw.write(String.valueOf(height));
-		fw.write('\n');
-		fw.write(String.valueOf(INFINITY - 1));
-		fw.write('\n');
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				fw.write(String.valueOf(image[i][j]));
-				fw.write(' ');
-			}
-			fw.write('\n');
-		}
-		fw.close();
-	}
-
-	/**
 	 * Compute the interest array of an image<br>
 	 * It will contains the contrast values of the image.
 	 * @param image Input image
@@ -131,7 +32,7 @@ public abstract class SeamCarving {
 	 * @see SeamCarving#toGraph
 	 **/
 	public static int[][] interest (int[][] image) {
-		int width = getWidth(image), height = getHeight(image);
+		int width = Image.getWidth(image), height = Image.getHeight(image);
 		if (width <= 1) {
 			throw new IllegalArgumentException("width = " + width + " must be > 1");
 		}
@@ -154,7 +55,7 @@ public abstract class SeamCarving {
 	 * @see SeamCarving#fordFulkerson
 	 **/
 	public static Graph toGraph(int[][] itr) {
-		int width = getWidth(itr), height = getHeight(itr);
+		int width = Image.getWidth(itr), height = Image.getHeight(itr);
 		int u, v;
 		Graph g = new Graph(width*height + 2);
 		for (int i = 0; i < height; i++) {
@@ -257,10 +158,10 @@ public abstract class SeamCarving {
 	 * @param vertices Pixels verticies to delete
 	 * @return the new images with the deleted pixels
 	 * @see SeamCarving#fordFulkerson
-	 * @see SeamCarving#writepgm
+	 * @see Image#writepgm
 	 **/
 	public static int[][] removePixels (int[][] image, List<Integer> vertices) {
-		int width = getWidth(image), height = getHeight(image);
+		int width = Image.getWidth(image), height = Image.getHeight(image);
 		int[] pixels = new int[height];
 		int[][] newImage = new int[height][width-1];
 		for (int v : vertices) {

@@ -5,7 +5,7 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 
-import cair.graph.SeamCarving;
+import cair.image.Image;
 
 public class FileChooser extends JFileChooser {
 
@@ -18,7 +18,7 @@ public class FileChooser extends JFileChooser {
 			new FileFilter() {
 				@Override
 				public String getDescription() {
-					return "*." + SeamCarving.EXTENSION;
+					return "*." + Image.EXTENSION;
 				}
 				@Override
 				public boolean accept(File pathname) {
@@ -26,7 +26,7 @@ public class FileChooser extends JFileChooser {
 						if(pathname.isDirectory()) {
 							return true;
 						}
-						return pathname.getName().endsWith("." + SeamCarving.EXTENSION);
+						return pathname.getName().endsWith("." + Image.EXTENSION);
 					}
 					return false;
 				}
