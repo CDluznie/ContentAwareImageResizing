@@ -23,23 +23,49 @@ public class Frame extends JFrame {
 
 	private static final long serialVersionUID = 5054998776518514039L;
 
+	private final ProgressBar progress;
+	private final FileChooser fc;
+	
 	private String inputName;
 	
 	public Frame() {
-		Container contentPane = getContentPane();
+		progress = createProgressBar();
+		fc = createFileChoose();
+		createContentPane();
 		setTitle("Content aware image resizing");
 		setLocationRelativeTo(null);
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(new Dimension(320, 218));
+		setVisible(true);
+	}
+	
+	private int[][] contentAwareResizing(int[][] image, int numberColumn) {
+		int[][] resultImage = image, interest;
+		Graph graph;
+		resultImage = image;
+		for (int i = 0; i < numberColumn; i++) {
+			interest = SeamCarving.interest(resultImage);
+			graph = SeamCarving.toGraph(interest);
+			resultImage = SeamCarving.removePixels(resultImage, SeamCarving.fordFulkerson(graph));
+			// TODO LAMBDA UPDATE consumer iteration (observer ?)
+			// MOVE FUNCTION IN SEAM CARVING
+			progress.increment();
+		}
+		return resultImage;
+	}
+
+	private void createContentPane() {
+		Container contentPane = getContentPane();
 		contentPane.setLayout(null);
+		
+		
 		Label input = new Label(), pixels = new Label();
 		TextField output = new TextField();
-		JButton chooseFile = new JButton(), validate = new JButton();
+		JButton chooseFile = createChooseFileButton();
+		JButton validate = createValidateButton();
 		JButton add = new JButton(), sub = new JButton();
 		Slider slider = new Slider();
-		ProgressBar progress = new ProgressBar();
-		FileChooser fc = new FileChooser();
 		input.setBounds(12, 12, 147, 30);
 		chooseFile.setBounds(168, 12, 134, 30);
 		output.setBounds(12, 52, 140, 30);
@@ -57,8 +83,8 @@ public class Frame extends JFrame {
 		contentPane.add(add);
 		contentPane.add(sub);
 		contentPane.add(slider);
-		chooseFile.setText("Choose file");
-		chooseFile.setFocusPainted(false);
+		
+		
 		chooseFile.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
@@ -86,8 +112,6 @@ public class Frame extends JFrame {
 			}
 		});
 		validate.setEnabled(false);
-		validate.setText("Validate");
-		validate.setFocusPainted(false);
 		validate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
@@ -104,10 +128,23 @@ public class Frame extends JFrame {
 						return;
 					}
 				}
+				int[][] image;
+				try {
+					image = Image.read(Paths.get(inputName));
+				} catch (IOException e) {
+					JOptionPane.showMessageDialog(null, "Invalid input image (can not find '" + inputName + ")", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				if (Image.getWidth(image) < Image.MIN_WIDTH || Image.getHeight(image) < Image.MIN_HEIGHT) {
+					JOptionPane.showMessageDialog(null, "Invalid input image (size should be greater than " + Image.MIN_HEIGHT + "x" + Image.MIN_WIDTH + ")", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				if (slider.getValue() == 0) {
 					return;
 				}
-				new Thread(new Runnable() {
+				
+				
+				Thread thread = new Thread(new Runnable() {
 					@Override
 					public void run() {
 						int pixels = slider.getValue();
@@ -122,36 +159,12 @@ public class Frame extends JFrame {
 						validate.setEnabled(false);
 						progress.setValue(0);
 						progress.setMaximum(pixels);
+						int[][] resultImage = contentAwareResizing(image, pixels);
 						try {
-							int[][] image, interest;
-							Graph graph;
-							image = Image.read(Paths.get(inputName));
-							if (Image.getWidth(image) < Image.MIN_WIDTH || Image.getHeight(image) < Image.MIN_HEIGHT) {
-								setSize(new Dimension(320, 218));
-								contentPane.remove(progress);
-								contentPane.repaint();
-								output.setEditable(true);
-								chooseFile.setEnabled(true);
-								add.setEnabled(true);
-								sub.setEnabled(true);
-								slider.setEnabled(true);
-								input.setText("");
-								output.setText("");
-								JOptionPane.showMessageDialog(null, "L'image doit etre de dimension superieur a " + Image.MIN_HEIGHT + "x" + Image.MIN_WIDTH, "Erreur", JOptionPane.ERROR_MESSAGE);
-								return;
-							}
-							// Here algorithm to remove pixels
-							for (int i = 0; i < pixels; i++) {
-								interest = SeamCarving.interest(image);
-								graph = SeamCarving.toGraph(interest);
-								image = SeamCarving.removePixels(image, SeamCarving.fordFulkerson(graph));
-								progress.increment();
-							}
-							Image.write(image, output.getText() + '.' + Image.EXTENSION);
+							Image.write(resultImage, output.getText() + '.' + Image.EXTENSION);
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-
 						setSize(new Dimension(320, 218));
 						contentPane.remove(progress);
 						contentPane.repaint();
@@ -163,7 +176,8 @@ public class Frame extends JFrame {
 						input.setText("");
 						output.setText("");
 					}
-				}).start();
+				});
+				thread.start();
 			}
 		});
 		slider.addChangeListener(new ChangeListener() {
@@ -189,7 +203,30 @@ public class Frame extends JFrame {
 			}
 		});
 		pixels.setText(String.valueOf(slider.getValue()));
-		setVisible(true);
+	}
+	
+	private JButton createChooseFileButton() {
+		JButton chooseFile = new JButton();
+		chooseFile.setText("Choose file");
+		chooseFile.setFocusPainted(false);
+		return chooseFile;
+	}
+	
+	private JButton createValidateButton() {
+		JButton validate = new JButton();
+		validate.setText("Validate");
+		validate.setFocusPainted(false);
+		return validate;
 	}
 
+	private ProgressBar createProgressBar() {
+		ProgressBar progress = new ProgressBar();
+		return progress;
+	}
+	
+	private FileChooser createFileChoose() {
+		FileChooser fc = new FileChooser();
+		return fc;
+	}
+	
 }
