@@ -82,7 +82,7 @@ public class Image {
 					);
 			}
 		}	
-	    ImageIO.write(imag, EXTENSION, new File(filename));
+	    ImageIO.write(imag, EXTENSION, new File(filename + '.' + Image.EXTENSION));
 	}
 
 }

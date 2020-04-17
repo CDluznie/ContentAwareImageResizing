@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -15,7 +14,6 @@ import javax.swing.JOptionPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import cair.graph.Graph;
 import cair.graph.SeamCarving;
 import cair.image.Image;
 
@@ -23,49 +21,43 @@ public class Frame extends JFrame {
 
 	private static final long serialVersionUID = 5054998776518514039L;
 
-	private final ProgressBar progress;
+	private final Container contentPane;
 	private final FileChooser fc;
+	private final JButton chooseFile;
+	private final Label input;
+	private final TextField output;
+	private final Label pixels;
+	private final JButton add;
+	private final JButton sub;
+	private final Slider slider;
+	private final JButton validate;
+	private final ProgressBar progress;
 	
 	private String inputName;
 	
 	public Frame() {
+		contentPane = getContentPane();
 		progress = createProgressBar();
+		chooseFile = createChooseFileButton();
 		fc = createFileChoose();
+		input = createInputFileNameLabel();
+		output = createOutputFileNameTextField();
+		pixels = createPixelsNumberLabel();
+		add = createAddButton();
+		sub = createSubButton();
+		slider = createSlider();
+		validate = createValidateButton();
 		createContentPane();
-		setTitle("Content aware image resizing");
+		setTitle("Content aware image width resizing");
 		setLocationRelativeTo(null);
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(new Dimension(320, 218));
 		setVisible(true);
 	}
-	
-	private int[][] contentAwareResizing(int[][] image, int numberColumn) {
-		int[][] resultImage = image, interest;
-		Graph graph;
-		resultImage = image;
-		for (int i = 0; i < numberColumn; i++) {
-			interest = SeamCarving.interest(resultImage);
-			graph = SeamCarving.toGraph(interest);
-			resultImage = SeamCarving.removePixels(resultImage, SeamCarving.fordFulkerson(graph));
-			// TODO LAMBDA UPDATE consumer iteration (observer ?)
-			// MOVE FUNCTION IN SEAM CARVING
-			progress.increment();
-		}
-		return resultImage;
-	}
 
 	private void createContentPane() {
-		Container contentPane = getContentPane();
 		contentPane.setLayout(null);
-		
-		
-		Label input = new Label(), pixels = new Label();
-		TextField output = new TextField();
-		JButton chooseFile = createChooseFileButton();
-		JButton validate = createValidateButton();
-		JButton add = new JButton(), sub = new JButton();
-		Slider slider = new Slider();
 		input.setBounds(12, 12, 147, 30);
 		chooseFile.setBounds(168, 12, 134, 30);
 		output.setBounds(12, 52, 140, 30);
@@ -83,34 +75,6 @@ public class Frame extends JFrame {
 		contentPane.add(add);
 		contentPane.add(sub);
 		contentPane.add(slider);
-		
-		
-		chooseFile.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				if (fc.showOpenDialog(chooseFile) == JFileChooser.APPROVE_OPTION) {
-					String toPrint;
-					int textWidth, fieldWidth;
-					inputName = fc.getSelectedFile().getAbsolutePath();
-					toPrint = inputName;
-					textWidth = input.getFontMetrics(input.getFont()).stringWidth(toPrint);
-					fieldWidth = (int) input.getSize().getWidth() - input.getInsets().left - input.getInsets().right;
-					if (textWidth >= fieldWidth) {
-						while (textWidth >= fieldWidth) {
-							toPrint = toPrint.substring(1);
-							textWidth = input.getFontMetrics(input.getFont()).stringWidth(toPrint);
-						}
-						toPrint = toPrint.substring(3);
-						if (toPrint.indexOf(File.separator) != -1) {
-							toPrint = toPrint.substring(toPrint.indexOf(File.separator));
-						}
-						toPrint = "..." + toPrint;
-					}
-					input.setText(toPrint);
-					validate.setEnabled(true);
-				}
-			}
-		});
 		validate.setEnabled(false);
 		validate.addActionListener(new ActionListener() {
 			@Override
@@ -142,64 +106,27 @@ public class Frame extends JFrame {
 				if (slider.getValue() == 0) {
 					return;
 				}
-				
-				
 				Thread thread = new Thread(new Runnable() {
 					@Override
 					public void run() {
 						int pixels = slider.getValue();
-						setSize(new Dimension(320, 256));
-						contentPane.add(progress);
-						contentPane.repaint();
-						output.setEditable(false);
-						chooseFile.setEnabled(false);
-						add.setEnabled(false);
-						sub.setEnabled(false);
-						slider.setEnabled(false);
-						validate.setEnabled(false);
+						setBusyState();
 						progress.setValue(0);
 						progress.setMaximum(pixels);
-						int[][] resultImage = contentAwareResizing(image, pixels);
+						int[][] resultImage = SeamCarving.contentAwareResizing(
+								image,
+								pixels,
+								__ -> progress.increment()
+						);
 						try {
-							Image.write(resultImage, output.getText() + '.' + Image.EXTENSION);
+							Image.write(resultImage, output.getText());
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-						setSize(new Dimension(320, 218));
-						contentPane.remove(progress);
-						contentPane.repaint();
-						output.setEditable(true);
-						chooseFile.setEnabled(true);
-						add.setEnabled(true);
-						sub.setEnabled(true);
-						slider.setEnabled(true);
-						input.setText("");
-						output.setText("");
+						setUsableState();
 					}
 				});
 				thread.start();
-			}
-		});
-		slider.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent arg0) {
-				pixels.setText(String.valueOf(slider.getValue()));
-			}
-		});
-		add.setText("+");
-		add.setFocusPainted(false);
-		add.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				slider.setValue(slider.getValue() + 1);
-			}
-		});
-		sub.setText("-");
-		sub.setFocusPainted(false);
-		sub.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event) {
-				slider.setValue(slider.getValue() - 1);
 			}
 		});
 		pixels.setText(String.valueOf(slider.getValue()));
@@ -209,7 +136,115 @@ public class Frame extends JFrame {
 		JButton chooseFile = new JButton();
 		chooseFile.setText("Choose file");
 		chooseFile.setFocusPainted(false);
+		chooseFile.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				if (fc.showOpenDialog(chooseFile) == JFileChooser.APPROVE_OPTION) {
+					String toPrint;
+					int textWidth, fieldWidth;
+					inputName = fc.getSelectedFile().getAbsolutePath();
+					toPrint = inputName;
+					textWidth = input.getFontMetrics(input.getFont()).stringWidth(toPrint);
+					fieldWidth = (int) input.getSize().getWidth() - input.getInsets().left - input.getInsets().right;
+					if (textWidth >= fieldWidth) {
+						while (textWidth >= fieldWidth) {
+							toPrint = toPrint.substring(1);
+							textWidth = input.getFontMetrics(input.getFont()).stringWidth(toPrint);
+						}
+						toPrint = toPrint.substring(3);
+						if (toPrint.indexOf(File.separator) != -1) {
+							toPrint = toPrint.substring(toPrint.indexOf(File.separator));
+						}
+						toPrint = "..." + toPrint;
+					}
+					input.setText(toPrint);
+					validate.setEnabled(true);
+				}
+			}
+		});
 		return chooseFile;
+	}
+	
+	private void setUsableState() {
+		setSize(new Dimension(320, 218));
+		contentPane.remove(progress);
+		contentPane.repaint();
+		output.setEditable(true);
+		chooseFile.setEnabled(true);
+		add.setEnabled(true);
+		sub.setEnabled(true);
+		slider.setEnabled(true);
+		input.setText("");
+		output.setText("");
+	}
+	
+	private void setBusyState() {
+		setSize(new Dimension(320, 256));
+		contentPane.add(progress);
+		contentPane.repaint();
+		output.setEditable(false);
+		chooseFile.setEnabled(false);
+		add.setEnabled(false);
+		sub.setEnabled(false);
+		slider.setEnabled(false);
+		validate.setEnabled(false);
+	}
+	
+	private FileChooser createFileChoose() {
+		FileChooser fc = new FileChooser();
+		return fc;
+	}
+	
+	private Label createInputFileNameLabel() {
+		Label input = new Label();
+		return input;
+	}
+	
+	private TextField createOutputFileNameTextField() {
+		TextField output = new TextField();
+		return output;
+	}
+	
+	private Label createPixelsNumberLabel() {
+		Label pixels = new Label();
+		return pixels;
+	}
+	
+	private JButton createAddButton() {
+		JButton add = new JButton();
+		add.setText("+");
+		add.setFocusPainted(false);
+		add.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				slider.setValue(slider.getValue() + 1);
+			}
+		});
+		return add;
+	}
+	
+	private JButton createSubButton() {
+		JButton sub = new JButton();
+		sub.setText("-");
+		sub.setFocusPainted(false);
+		sub.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				slider.setValue(slider.getValue() - 1);
+			}
+		});
+		return sub;
+	}
+
+	private Slider createSlider() {
+		Slider slider = new Slider();
+		slider.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				pixels.setText(String.valueOf(slider.getValue()));
+			}
+		});
+		return slider;
 	}
 	
 	private JButton createValidateButton() {
@@ -218,15 +253,10 @@ public class Frame extends JFrame {
 		validate.setFocusPainted(false);
 		return validate;
 	}
-
+	
 	private ProgressBar createProgressBar() {
 		ProgressBar progress = new ProgressBar();
 		return progress;
-	}
-	
-	private FileChooser createFileChoose() {
-		FileChooser fc = new FileChooser();
-		return fc;
 	}
 	
 }

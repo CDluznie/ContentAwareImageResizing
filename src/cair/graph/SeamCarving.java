@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.function.IntConsumer;
 
 import cair.image.Image;
 
@@ -176,6 +177,26 @@ public abstract class SeamCarving {
 			}
 		}
 		return newImage;
+	}
+	
+	/**
+	 * TODO
+	 * @param image
+	 * @param numberColumn
+	 * @param observer
+	 * @return
+	 */
+	public static int[][] contentAwareResizing(int[][] image, int numberColumn, IntConsumer observer) {
+		int[][] resultImage = image, interest;
+		Graph graph;
+		resultImage = image;
+		for (int i = 0; i < numberColumn; i++) {
+			interest = SeamCarving.interest(resultImage);
+			graph = SeamCarving.toGraph(interest);
+			resultImage = SeamCarving.removePixels(resultImage, SeamCarving.fordFulkerson(graph));
+			observer.accept(i);
+		}
+		return resultImage;
 	}
 	
 }
