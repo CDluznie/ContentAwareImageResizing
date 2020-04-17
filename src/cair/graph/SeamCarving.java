@@ -25,49 +25,26 @@ public abstract class SeamCarving {
 	public static int BFS_PARENT_NONE = -1;
 	
 	/**
-	 * Compute the interest array of an image<br>
-	 * It will contains the contrast values of the image.
-	 * @param image Input image
-	 * @return the interest array of the image
-	 * @throws IllegalArgumentException image.width &le; 1
-	 * @see SeamCarving#toGraph
-	 **/
-	public static int[][] interest (int[][] image) {
-		int width = Image.getWidth(image), height = Image.getHeight(image);
-		if (width <= 1) {
-			throw new IllegalArgumentException("width = " + width + " must be > 1");
-		}
-		int[][] interest = new int[height][width];
-		for (int i = 0; i < height; i++) {
-			interest[i][0] = Math.abs(image[i][0] - image[i][1]);
-			for (int j = 1; j < width-1; j++) {
-				interest[i][j] = Math.abs(image[i][j] - (image[i][j-1] + image[i][j+1])/2);
-			}
-			interest[i][width-1] = Math.abs(image[i][width-1] - image[i][width-2]);
-		}
-		return interest;
-	}
-	
-	/**
 	 * Generate a graph from an interest array
-	 * @param itr Interest array
+	 * @param image 
 	 * @return the associated graph
-	 * @see SeamCarving#interest
+	 * @see Image#interest
 	 * @see SeamCarving#fordFulkerson
 	 **/
-	public static Graph toGraph(int[][] itr) {
-		int width = Image.getWidth(itr), height = Image.getHeight(itr);
+	public static Graph toGraph(Image image) {
+		int width = image.getWidth(), height = image.getHeight();
+		int[][] interest = image.interest();
 		int u, v;
 		Graph g = new Graph(width*height + 2);
 		for (int i = 0; i < height; i++) {
 			g.addEdge(new Edge(0, i + 1, INFINITY, 0));
-			g.addEdge(new Edge(i + (width - 1)*height + 1, width*height + 1, itr[i][width-1], 0));
+			g.addEdge(new Edge(i + (width - 1)*height + 1, width*height + 1, interest[i][width-1], 0));
 		}
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width - 1; j++) {
 				u = i + j*height + 1;
 				v = i + (j+1)*height + 1;
-				g.addEdge(new Edge(u, v, itr[i][j], 0));
+				g.addEdge(new Edge(u, v, interest[i][j], 0));
 				g.addEdge(new Edge(v, u, INFINITY, 0));
 				if (i > 0) {
 					g.addEdge(new Edge(v - 1, u, INFINITY, 0));
@@ -156,38 +133,13 @@ public abstract class SeamCarving {
 	/**
 	 * TODO
 	 **/
-	public static int[] verticesToPixelsPosition(int[][] image, List<Integer> vertices) {
-		int height = Image.getHeight(image);
+	public static int[] verticesToPixelsPosition(Image image, List<Integer> vertices) {
+		int height = image.getHeight();
 		int[] positions = new int[height];
 		for (int v : vertices) {
 			positions[(v-1)%height] = (v-1)/height;
 		}
 		return positions;
-	}
-	
-	/**
-	 * Delete in the image the pixels indexed by the vertices in the list<br>
-	 * @param image The image to process
-
-	 * TODO
-	 * 
-	 * 
-	 * @return the new images with the deleted pixels
-	 * @see SeamCarving#fordFulkerson
-	 * @see Image#writepgm
-	 **/
-	public static int[][] removePixelsWidth (int[][] image, int[] positions) {
-		int width = Image.getWidth(image), height = Image.getHeight(image);
-		int[][] newImage = new int[height][width-1];
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < positions[i]; j++) {
-				newImage[i][j] = image[i][j];
-			}
-			for (int j = positions[i]; j < width-1; j++) {
-				newImage[i][j] = image[i][j+1];
-			}
-		}
-		return newImage;
 	}
 	
 	/**
@@ -198,17 +150,16 @@ public abstract class SeamCarving {
 	 * @return
 	 */
 	public static Image contentAwareResizing(Image image, int numberColumn, IntConsumer observer) {
-		int[][] resultImage = image.getArray(), interest;
+		Image resultImage = image;
 		Graph graph;
 		List<Integer> graphCut;
 		for (int i = 0; i < numberColumn; i++) {
-			interest = SeamCarving.interest(resultImage);
-			graph = SeamCarving.toGraph(interest);
+			graph = SeamCarving.toGraph(resultImage);
 			graphCut = SeamCarving.fordFulkerson(graph);
-			resultImage = SeamCarving.removePixelsWidth(resultImage, verticesToPixelsPosition(resultImage, graphCut));
+			resultImage.removePixelsWidth(verticesToPixelsPosition(resultImage, graphCut));
 			observer.accept(i);
 		}
-		return new Image(resultImage);
+		return resultImage;
 	}
 	
 }

@@ -119,7 +119,7 @@ public class Frame extends JFrame {
 								__ -> progress.increment()
 						);
 						try {
-							Image.write(resultImage, output.getText());
+							resultImage.write(output.getText());
 						} catch (IOException e) {
 							e.printStackTrace();
 						}

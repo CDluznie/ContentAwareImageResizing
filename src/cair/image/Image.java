@@ -7,31 +7,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import javax.imageio.ImageIO;
 
+import cair.graph.SeamCarving;
+
 public class Image {
 	
-	private final int width;
-	private final int height;
+	private int width;
+	private int height;
 	private final int[][] imageArray;
-	
-	private Image(BufferedImage image) {
-		width = image.getWidth();
-		height = image.getHeight();
-		imageArray = new int[height][width];
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				Color color = new Color(image.getRGB(i, j));
-				imageArray[j][i] = (color.getRed() + color.getGreen() + color.getBlue())/3;
-			}
-		}
-
-	
-	}
-	
-	public Image(int[][] image) {
-		width = getWidth(image);
-		height = getHeight(image);
-		imageArray = image;
-	}
 	
 	/**
 	 * Processed format file
@@ -48,23 +30,21 @@ public class Image {
 	public static int MIN_WIDTH = 60;
 
 	/**
-	 * Return the height of the image
-	 * @param image Input image
-	 * @return the height of the image
-	 * @see getWidth
-	 **/
-	public static int getHeight(int[][] image) {
-		return image.length;
-	}
+	 * 
+	 * @param image
+	 */
+	private Image(BufferedImage image) {
+		width = image.getWidth();
+		height = image.getHeight();
+		imageArray = new int[height][width];
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Color color = new Color(image.getRGB(i, j));
+				imageArray[j][i] = (color.getRed() + color.getGreen() + color.getBlue())/3;
+			}
+		}
 
-	/**
-	 * Return the width of the image
-	 * @param image Input image
-	 * @return the width of the image
-	 * @see getHeight
-	 **/
-	public static int getWidth(int[][] image) {
-		return image[0].length;
+	
 	}
 	
 	/**
@@ -85,8 +65,45 @@ public class Image {
 		return width;
 	}
 	
-	public int[][] getArray() {
-		return imageArray;
+	/**
+	 * Compute the interest array of an image<br>
+	 * It will contains the contrast values of the image.
+	 * @return the interest array of the image
+	 * @throws IllegalArgumentException image.width &le; 1
+	 * @see SeamCarving#toGraph
+	 **/
+	public int[][] interest () {
+		if (width <= 1) {
+			throw new IllegalArgumentException("width = " + width + " must be > 1");
+		}
+		int[][] interest = new int[height][width];
+		for (int i = 0; i < height; i++) {
+			interest[i][0] = Math.abs(imageArray[i][0] - imageArray[i][1]);
+			for (int j = 1; j < width-1; j++) {
+				interest[i][j] = Math.abs(imageArray[i][j] - (imageArray[i][j-1] + imageArray[i][j+1])/2);
+			}
+			interest[i][width-1] = Math.abs(imageArray[i][width-1] - imageArray[i][width-2]);
+		}
+		return interest;
+	}
+
+	/**
+
+	
+	 * TODO
+	 * 
+	 * 
+	 * @return the new images with the deleted pixels
+	 * @see SeamCarving#fordFulkerson
+	 * @see Image#writepgm
+	 **/
+	public void removePixelsWidth (int[] positions) {
+		for (int i = 0; i < height; i++) {
+			for (int j = positions[i]; j < width-1; j++) {
+				imageArray[i][j] = imageArray[i][j+1];
+			}
+		}
+		width--;
 	}
 
 	/**
@@ -103,23 +120,22 @@ public class Image {
 
 	/**
 	 * Save the color array as a PNG file
-	 * @param image Input image
 	 * @param filename Ouput file name
 	 * @throws IOException Input/Output error
 	 * @see read
 	 **/
-	public static void write(Image image, String filename) throws IOException {
-		BufferedImage imag = new BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB);
-		for (int i = 0; i < image.width; i++) {
-			for (int j = 0; j < image.height; j++) {
-				imag.setRGB(
+	public void write(String filename) throws IOException {
+		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				image.setRGB(
 						i,
 						j, 
-						new Color(image.imageArray[j][i], image.imageArray[j][i], image.imageArray[j][i], 255).getRGB()
+						new Color(imageArray[j][i], imageArray[j][i], imageArray[j][i], 255).getRGB()
 					);
 			}
 		}	
-	    ImageIO.write(imag, EXTENSION, new File(filename + '.' + Image.EXTENSION));
+	    ImageIO.write(image, EXTENSION, new File(filename + '.' + Image.EXTENSION));
 	}
 
 }
