@@ -92,14 +92,14 @@ public class Frame extends JFrame {
 						return;
 					}
 				}
-				int[][] image;
+				Image image;
 				try {
 					image = Image.read(Paths.get(inputName));
 				} catch (IOException e) {
 					JOptionPane.showMessageDialog(null, "Invalid input image (can not find '" + inputName + ")", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				if (Image.getWidth(image) < Image.MIN_WIDTH || Image.getHeight(image) < Image.MIN_HEIGHT) {
+				if (image.getWidth() < Image.MIN_WIDTH || image.getHeight() < Image.MIN_HEIGHT) {
 					JOptionPane.showMessageDialog(null, "Invalid input image (size should be greater than " + Image.MIN_HEIGHT + "x" + Image.MIN_WIDTH + ")", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
@@ -113,7 +113,7 @@ public class Frame extends JFrame {
 						setBusyState();
 						progress.setValue(0);
 						progress.setMaximum(pixels);
-						int[][] resultImage = SeamCarving.contentAwareResizing(
+						Image resultImage = SeamCarving.contentAwareResizing(
 								image,
 								pixels,
 								__ -> progress.increment()

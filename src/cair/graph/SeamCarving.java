@@ -154,25 +154,36 @@ public abstract class SeamCarving {
 	} 
 	
 	/**
+	 * TODO
+	 **/
+	public static int[] verticesToPixelsPosition(int[][] image, List<Integer> vertices) {
+		int height = Image.getHeight(image);
+		int[] positions = new int[height];
+		for (int v : vertices) {
+			positions[(v-1)%height] = (v-1)/height;
+		}
+		return positions;
+	}
+	
+	/**
 	 * Delete in the image the pixels indexed by the vertices in the list<br>
 	 * @param image The image to process
-	 * @param vertices Pixels verticies to delete
+
+	 * TODO
+	 * 
+	 * 
 	 * @return the new images with the deleted pixels
 	 * @see SeamCarving#fordFulkerson
 	 * @see Image#writepgm
 	 **/
-	public static int[][] removePixels (int[][] image, List<Integer> vertices) {
+	public static int[][] removePixelsWidth (int[][] image, int[] positions) {
 		int width = Image.getWidth(image), height = Image.getHeight(image);
-		int[] pixels = new int[height];
 		int[][] newImage = new int[height][width-1];
-		for (int v : vertices) {
-			pixels[(v-1)%height] = (v-1)/height;
-		}
 		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < pixels[i]; j++) {
+			for (int j = 0; j < positions[i]; j++) {
 				newImage[i][j] = image[i][j];
 			}
-			for (int j = pixels[i]; j < width-1; j++) {
+			for (int j = positions[i]; j < width-1; j++) {
 				newImage[i][j] = image[i][j+1];
 			}
 		}
@@ -186,17 +197,18 @@ public abstract class SeamCarving {
 	 * @param observer
 	 * @return
 	 */
-	public static int[][] contentAwareResizing(int[][] image, int numberColumn, IntConsumer observer) {
-		int[][] resultImage = image, interest;
+	public static Image contentAwareResizing(Image image, int numberColumn, IntConsumer observer) {
+		int[][] resultImage = image.getArray(), interest;
 		Graph graph;
-		resultImage = image;
+		List<Integer> graphCut;
 		for (int i = 0; i < numberColumn; i++) {
 			interest = SeamCarving.interest(resultImage);
 			graph = SeamCarving.toGraph(interest);
-			resultImage = SeamCarving.removePixels(resultImage, SeamCarving.fordFulkerson(graph));
+			graphCut = SeamCarving.fordFulkerson(graph);
+			resultImage = SeamCarving.removePixelsWidth(resultImage, verticesToPixelsPosition(resultImage, graphCut));
 			observer.accept(i);
 		}
-		return resultImage;
+		return new Image(resultImage);
 	}
 	
 }

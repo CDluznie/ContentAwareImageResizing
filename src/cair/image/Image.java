@@ -9,6 +9,30 @@ import javax.imageio.ImageIO;
 
 public class Image {
 	
+	private final int width;
+	private final int height;
+	private final int[][] imageArray;
+	
+	private Image(BufferedImage image) {
+		width = image.getWidth();
+		height = image.getHeight();
+		imageArray = new int[height][width];
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Color color = new Color(image.getRGB(i, j));
+				imageArray[j][i] = (color.getRed() + color.getGreen() + color.getBlue())/3;
+			}
+		}
+
+	
+	}
+	
+	public Image(int[][] image) {
+		width = getWidth(image);
+		height = getHeight(image);
+		imageArray = image;
+	}
+	
 	/**
 	 * Processed format file
 	 **/
@@ -42,6 +66,28 @@ public class Image {
 	public static int getWidth(int[][] image) {
 		return image[0].length;
 	}
+	
+	/**
+	 * Return the height of the image
+	 * @return the height of the image
+	 * @see getWidth
+	 **/
+	public int getHeight() {
+		return height;
+	}
+
+	/**
+	 * Return the width of the image
+	 * @return the width of the image
+	 * @see getHeight
+	 **/
+	public int getWidth() {
+		return width;
+	}
+	
+	public int[][] getArray() {
+		return imageArray;
+	}
 
 	/**
 	 * Get an array containing the image of a PNG file
@@ -50,17 +96,9 @@ public class Image {
 	 * @throws IOException Input/Output error
 	 * @see write
 	 **/
-	public static int[][] read(Path path) throws IOException {
-		BufferedImage imag = ImageIO.read(new File(path.toString()));
-		int width = imag.getWidth(), height = imag.getHeight();
-		int[][] image = new int[height][width];
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				Color color = new Color(imag.getRGB(i, j));
-				image[j][i] = (color.getRed() + color.getGreen() + color.getBlue())/3;
-			}
-		}
-		return image;
+	public static Image read(Path path) throws IOException {
+		BufferedImage image = ImageIO.read(new File(path.toString()));
+		return new Image(image);
 	}
 
 	/**
@@ -70,15 +108,14 @@ public class Image {
 	 * @throws IOException Input/Output error
 	 * @see read
 	 **/
-	public static void write(int[][] image, String filename) throws IOException {
-		int width = getWidth(image), height = getHeight(image);
-		BufferedImage imag = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
+	public static void write(Image image, String filename) throws IOException {
+		BufferedImage imag = new BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB);
+		for (int i = 0; i < image.width; i++) {
+			for (int j = 0; j < image.height; j++) {
 				imag.setRGB(
 						i,
 						j, 
-						new Color(image[j][i], image[j][i], image[j][i], 255).getRGB()
+						new Color(image.imageArray[j][i], image.imageArray[j][i], image.imageArray[j][i], 255).getRGB()
 					);
 			}
 		}	
