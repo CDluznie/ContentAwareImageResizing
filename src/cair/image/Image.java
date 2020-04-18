@@ -14,6 +14,7 @@ public class Image {
 	private int width;
 	private int height;
 	private final int[][] imageArray;
+	private final BufferedImage image;
 	
 	/**
 	 * Processed format file
@@ -34,8 +35,11 @@ public class Image {
 	 * @param image
 	 */
 	private Image(BufferedImage image) {
-		width = image.getWidth();
-		height = image.getHeight();
+		this.width = image.getWidth();
+		this.height = image.getHeight();
+		this.image = image;
+		
+		
 		imageArray = new int[height][width];
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
@@ -103,6 +107,14 @@ public class Image {
 				imageArray[i][j] = imageArray[i][j+1];
 			}
 		}
+		
+		
+		for (int i = 0; i < height; i++) {
+			for (int j = positions[i]; j < width-1; j++) {
+				image.setRGB(j, i, image.getRGB(j+1, i));
+			}
+		}
+		
 		width--;
 	}
 
@@ -125,17 +137,7 @@ public class Image {
 	 * @see read
 	 **/
 	public void write(String filename) throws IOException {
-		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				image.setRGB(
-						i,
-						j, 
-						new Color(imageArray[j][i], imageArray[j][i], imageArray[j][i], 255).getRGB()
-					);
-			}
-		}	
-	    ImageIO.write(image, EXTENSION, new File(filename + '.' + Image.EXTENSION));
+	    ImageIO.write(image.getSubimage(0, 0, width, height), EXTENSION, new File(filename + '.' + Image.EXTENSION));
 	}
 
 }
