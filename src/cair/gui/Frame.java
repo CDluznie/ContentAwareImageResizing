@@ -19,6 +19,16 @@ import cair.image.Image;
 
 public class Frame extends JFrame {
 
+	/**
+	 * Smallest possible image width
+	 **/
+	public static int MIN_WIDTH = 60;
+
+	/**
+	 * Smallest possible image height
+	 **/
+	public static int MIN_HEIGHT = 60;
+	
 	private static final long serialVersionUID = 5054998776518514039L;
 
 	private final Container contentPane;
@@ -99,8 +109,8 @@ public class Frame extends JFrame {
 					JOptionPane.showMessageDialog(null, "Invalid input image (can not find '" + inputName + ")", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				if (image.getWidth() < Image.MIN_WIDTH || image.getHeight() < Image.MIN_HEIGHT) {
-					JOptionPane.showMessageDialog(null, "Invalid input image (size should be greater than " + Image.MIN_HEIGHT + "x" + Image.MIN_WIDTH + ")", "Error", JOptionPane.ERROR_MESSAGE);
+				if (image.getWidth() < Frame.MIN_WIDTH || image.getHeight() < Frame.MIN_HEIGHT) {
+					JOptionPane.showMessageDialog(null, "Invalid input image (size should be greater than " + Frame.MIN_HEIGHT + "x" + Frame.MIN_WIDTH + ")", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				if (slider.getValue() == 0) {

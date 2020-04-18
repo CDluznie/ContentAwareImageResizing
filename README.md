@@ -1,4 +1,10 @@
-# TODO
+# Content Aware image resizing
+
+implementation with seam carving
+
+![tower](./doc/results/tower.png)
+
+![result-tower](./doc/results/tower_result.png)
 
 ## Usage
 

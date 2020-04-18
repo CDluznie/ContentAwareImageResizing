@@ -33,7 +33,7 @@ public abstract class SeamCarving {
 	 **/
 	public static Graph toGraph(Image image) {
 		int width = image.getWidth(), height = image.getHeight();
-		int[][] interest = image.interest();
+		int[][] interest = image.horizontalGradient();
 		int u, v;
 		Graph g = new Graph(width*height + 2);
 		for (int i = 0; i < height; i++) {
