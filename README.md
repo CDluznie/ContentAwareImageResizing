@@ -4,6 +4,8 @@ implementation with seam carving
 
 ![tower](./doc/results/tower.png)
 
+![resize-tower](./doc/results/tower_resize.png)
+
 ![result-tower](./doc/results/tower_result.png)
 
 ## Usage
