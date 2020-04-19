@@ -22,20 +22,23 @@ public class Image {
 	public static String EXTENSION = "png";
 	
 	/**
-	 * 
-	 * @param image
+	 * Construct an image
+	 * @param image Image
+	 * @see Image#read
+	 * @see Image#write
 	 */
 	private Image(BufferedImage image) {
 		this.width = image.getWidth();
 		this.height = image.getHeight();
 		this.image = image;
-		this.grey = extractValueFromRgb(image);
+		this.grey = rgbToGrey(image);
 	}
 	
 	/**
 	 * Return the height of the image
 	 * @return the height of the image
 	 * @see getWidth
+	 * @see Image#getWidth
 	 **/
 	public int getHeight() {
 		return height;
@@ -44,7 +47,7 @@ public class Image {
 	/**
 	 * Return the width of the image
 	 * @return the width of the image
-	 * @see getHeight
+	 * @see Image#getHeight
 	 **/
 	public int getWidth() {
 		return width;
@@ -55,6 +58,7 @@ public class Image {
 	 * @return the gradient of the image
 	 * @throws IllegalArgumentException image.width &le; 1
 	 * @see SeamCarving#toGraph
+	 * @see Image#verticalGradient
 	 **/
 	public int[][] horizontalGradient () {
 		if (width <= 1) {
@@ -76,6 +80,7 @@ public class Image {
 	 * @return the gradient of the image
 	 * @throws IllegalArgumentException image.width &le; 1
 	 * @see SeamCarving#toGraph
+	 * @see Image#horizontalGradient
 	 **/
 	public int[][] verticalGradient () {
 		if (height <= 1) {
@@ -93,8 +98,10 @@ public class Image {
 	}
 
 	/**
-	 * TODO
-	 * 
+	 * Reduce the width of the image
+	 * Because we want to remove a pixel at each column, we use a 1D array of a size equal to the height the image,
+	 * where the i-th value contains the value on x of the position (a coordinate on the image is represented by i, arr[i])
+	 * @param positions Pixel positions of the image to remove
 	 * @see SeamCarving#contentAwareResizing
 	 **/
 	public void removePixelsWidth (int[] positions) {
@@ -108,8 +115,10 @@ public class Image {
 	}
 	
 	/**
-	 * TODO
-	 * 
+	 * Reduce the height of the image
+	 * Because we want to remove a pixel at each line, we use a 1D array of a size equal to the width the image,
+	 * where the i-th value contains the value on y of the position (a coordinate on the image is represented by arr[i], i)
+	 * @param positions Pixel positions of the image to remove
 	 * @see SeamCarving#contentAwareResizing
 	 **/
 	public void removePixelsHeight (int[] positions) {
@@ -144,7 +153,7 @@ public class Image {
 	    ImageIO.write(image.getSubimage(0, 0, width, height), EXTENSION, new File(filename + '.' + Image.EXTENSION));
 	}
 
-	private static int[][] extractValueFromRgb(BufferedImage image) {
+	private static int[][] rgbToGrey(BufferedImage image) {
 		int width = image.getWidth(), height = image.getHeight();
 		int[][] grey = new int[height][width];
 		for (int i = 0; i < width; i++) {

@@ -143,7 +143,6 @@ public class Graph {
 				PrintWriter printer = new PrintWriter(writer)) {
 			printer.println("digraph G{");
 			for (Edge e : edges()) {
-				//si on ne veut pas afficher les arcs utilises et que l'arc n'est pas utilise on ne le traite pas
 				if (!printUnused && e.getUsed() <= 0) {
 					continue;
 				}
@@ -163,6 +162,6 @@ public class Graph {
 	 **/
 	public void writeFile(Path path) throws IOException {
 		writeFile(path, true);
-	}
+	}	
 
 }

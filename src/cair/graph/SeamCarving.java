@@ -28,23 +28,23 @@ public abstract class SeamCarving {
 	 * Generate a graph from an interest array
 	 * @param image 
 	 * @return the associated graph
-	 * @see Image#interest
+	 * @see Image#horizontalGradient
 	 * @see SeamCarving#fordFulkerson
 	 **/
 	public static Graph toGraph(Image image) {
 		int width = image.getWidth(), height = image.getHeight();
-		int[][] interest = image.horizontalGradient();
+		int[][] gradient = image.horizontalGradient();
 		int u, v;
 		Graph g = new Graph(width*height + 2);
 		for (int i = 0; i < height; i++) {
 			g.addEdge(new Edge(0, i + 1, INFINITY, 0));
-			g.addEdge(new Edge(i + (width - 1)*height + 1, width*height + 1, interest[i][width-1], 0));
+			g.addEdge(new Edge(i + (width - 1)*height + 1, width*height + 1, gradient[i][width-1], 0));
 		}
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width - 1; j++) {
 				u = i + j*height + 1;
 				v = i + (j+1)*height + 1;
-				g.addEdge(new Edge(u, v, interest[i][j], 0));
+				g.addEdge(new Edge(u, v, gradient[i][j], 0));
 				g.addEdge(new Edge(v, u, INFINITY, 0));
 				if (i > 0) {
 					g.addEdge(new Edge(v - 1, u, INFINITY, 0));
@@ -99,7 +99,7 @@ public abstract class SeamCarving {
 	 * @return the list of pixels to remove
 	 * @see SeamCarving#toGraph
 	 * @see SeamCarving#bfs
-	 * @see SeamCarving#removePixels
+	 * @see SeamCarving#verticesToPixelsPosition
 	 **/
 	public static List<Integer> fordFulkerson(Graph gitr) {
 		ArrayList<Integer> result = new ArrayList<>();
@@ -130,24 +130,43 @@ public abstract class SeamCarving {
 		return result;
 	} 
 	
+	private static int getVertexX(Image image, int vertex) {
+		return (vertex-1)/image.getHeight();
+	}
+
+	private static int getVertexY(Image image, int vertex) {
+		return (vertex-1)%image.getHeight();
+	}
+	
 	/**
-	 * TODO
-	 **/
+	 * Convert the vertices index to positions in the image<br>
+	 * Note that on every line exactly one pixel will be remove.<br>
+	 * Then, we return the corresponding positions as a 1D array of a size equal to the height the image,
+	 * where the i-th value contains the value on x of the position (a coordinate on the image is represented by i, arr[i])
+	 * @param image Image used to generate the graph
+	 * @param vertices Vertices to convert
+	 * @return the vertices positions in the image
+	 * @see SeamCarving#fordFulkerson
+	 * @see Image#removePixelsWidth
+	 */
 	public static int[] verticesToPixelsPosition(Image image, List<Integer> vertices) {
-		int height = image.getHeight();
-		int[] positions = new int[height];
+		int[] positions = new int[image.getHeight()];
 		for (int v : vertices) {
-			positions[(v-1)%height] = (v-1)/height;
+			positions[getVertexY(image, v)] = getVertexX(image, v);
 		}
 		return positions;
 	}
 	
 	/**
-	 * TODO
-	 * @param image
-	 * @param numberColumn
-	 * @param observer
-	 * @return
+	 * Remove column in the image by performing the seam carving algorithm
+	 * @param image Input image
+	 * @param numberColumn Number of column to remove
+	 * @param observer Notification function called each time a column is removed
+	 * @return the reduced image
+	 * @see SeamCarving#toGraph
+	 * @see SeamCarving#fordFulkerson
+	 * @see SeamCarving#verticesToPixelsPosition
+	 * @see Image#removePixelsWidth
 	 */
 	public static Image contentAwareResizing(Image image, int numberColumn, IntConsumer observer) {
 		Image resultImage = image;

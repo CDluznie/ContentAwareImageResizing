@@ -8,6 +8,8 @@ implementation with seam carving
 
 ![result-tower](./doc/results/tower_result.png)
 
+The tool can only reduce width of images but with an implementation of another graph generation based on vertical gradient the reduction of the height of the image is possible
+
 ## Usage
 
 - compile :
@@ -17,7 +19,7 @@ implementation with seam carving
 - generate documentation :
 	* javadoc -d docs/api @files
 
-	
+
 - run :
 	* java -cp bin/ cair.main.Main
 
