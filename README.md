@@ -29,7 +29,7 @@ As we can see the left image is flattened while there is no distortion in the ri
 	- `javac -d bin/ @files`
 
 * Generate documentation :
-	- `javadoc -d docs/api @files`
+	- `javadoc -d doc/api @files`
 
 * Run :
 	- `java -cp bin/ cair.main.Main`
