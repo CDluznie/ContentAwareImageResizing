@@ -18,16 +18,6 @@ import cair.graph.SeamCarving;
 import cair.image.Image;
 
 public class Frame extends JFrame {
-
-	/**
-	 * Smallest possible image width
-	 **/
-	public static int MIN_WIDTH = 60;
-
-	/**
-	 * Smallest possible image height
-	 **/
-	public static int MIN_HEIGHT = 60;
 	
 	private static final long serialVersionUID = 5054998776518514039L;
 
@@ -43,7 +33,7 @@ public class Frame extends JFrame {
 	private final JButton validate;
 	private final ProgressBar progress;
 	
-	private String inputName;
+	private Image inputImage;
 	
 	public Frame() {
 		contentPane = getContentPane();
@@ -85,6 +75,7 @@ public class Frame extends JFrame {
 		contentPane.add(add);
 		contentPane.add(sub);
 		contentPane.add(slider);
+		setPixelChooserState(false);
 		validate.setEnabled(false);
 		validate.addActionListener(new ActionListener() {
 			@Override
@@ -102,30 +93,23 @@ public class Frame extends JFrame {
 						return;
 					}
 				}
-				Image image;
-				try {
-					image = Image.read(Paths.get(inputName));
-				} catch (IOException e) {
-					JOptionPane.showMessageDialog(null, "Invalid input image (can not find '" + inputName + ")", "Error", JOptionPane.ERROR_MESSAGE);
+				int numberPixels = slider.getValue();
+				if (inputImage.getWidth() <= numberPixels) {
+					JOptionPane.showMessageDialog(null, "Error : you can not remove at most " + "5" + " columns on this image", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				if (image.getWidth() < Frame.MIN_WIDTH || image.getHeight() < Frame.MIN_HEIGHT) {
-					JOptionPane.showMessageDialog(null, "Invalid input image (size should be greater than " + Frame.MIN_HEIGHT + "x" + Frame.MIN_WIDTH + ")", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (slider.getValue() == 0) {
+				if (numberPixels == 0) {
 					return;
 				}
 				Thread thread = new Thread(new Runnable() {
 					@Override
 					public void run() {
-						int pixels = slider.getValue();
 						setBusyState();
 						progress.setValue(0);
-						progress.setMaximum(pixels);
+						progress.setMaximum(numberPixels);
 						Image resultImage = SeamCarving.contentAwareResizing(
-								image,
-								pixels,
+								inputImage,
+								numberPixels,
 								__ -> progress.increment()
 						);
 						try {
@@ -134,12 +118,41 @@ public class Frame extends JFrame {
 							e.printStackTrace();
 						}
 						setUsableState();
+						setPixelChooserState(false);
+						slider.setMaximum(50);
 					}
 				});
 				thread.start();
 			}
 		});
 		pixels.setText(String.valueOf(slider.getValue()));
+	}
+	
+	private void setPixelChooserState(boolean enable) {
+		slider.setEnabled(enable);
+		add.setEnabled(enable);
+		sub.setEnabled(enable);
+	}
+	
+	private void setUsableState() {
+		setSize(new Dimension(320, 218));
+		contentPane.remove(progress);
+		contentPane.repaint();
+		output.setEditable(true);
+		chooseFile.setEnabled(true);
+		setPixelChooserState(true);
+		input.setText("");
+		output.setText("");
+	}
+	
+	private void setBusyState() {
+		setSize(new Dimension(320, 256));
+		contentPane.add(progress);
+		contentPane.repaint();
+		output.setEditable(false);
+		chooseFile.setEnabled(false);
+		setPixelChooserState(false);
+		validate.setEnabled(false);
 	}
 	
 	private JButton createChooseFileButton() {
@@ -152,8 +165,14 @@ public class Frame extends JFrame {
 				if (fc.showOpenDialog(chooseFile) == JFileChooser.APPROVE_OPTION) {
 					String toPrint;
 					int textWidth, fieldWidth;
-					inputName = fc.getSelectedFile().getAbsolutePath();
+					String inputName = fc.getSelectedFile().getAbsolutePath();
 					toPrint = inputName;
+					try {
+						inputImage = Image.read(Paths.get(inputName));
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(null, "Invalid input image (can not find '" + inputName + ")", "Error", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
 					textWidth = input.getFontMetrics(input.getFont()).stringWidth(toPrint);
 					fieldWidth = (int) input.getSize().getWidth() - input.getInsets().left - input.getInsets().right;
 					if (textWidth >= fieldWidth) {
@@ -168,36 +187,13 @@ public class Frame extends JFrame {
 						toPrint = "..." + toPrint;
 					}
 					input.setText(toPrint);
+					setPixelChooserState(true);
+					slider.setMaximum(inputImage.getWidth()-5);
 					validate.setEnabled(true);
 				}
 			}
 		});
 		return chooseFile;
-	}
-	
-	private void setUsableState() {
-		setSize(new Dimension(320, 218));
-		contentPane.remove(progress);
-		contentPane.repaint();
-		output.setEditable(true);
-		chooseFile.setEnabled(true);
-		add.setEnabled(true);
-		sub.setEnabled(true);
-		slider.setEnabled(true);
-		input.setText("");
-		output.setText("");
-	}
-	
-	private void setBusyState() {
-		setSize(new Dimension(320, 256));
-		contentPane.add(progress);
-		contentPane.repaint();
-		output.setEditable(false);
-		chooseFile.setEnabled(false);
-		add.setEnabled(false);
-		sub.setEnabled(false);
-		slider.setEnabled(false);
-		validate.setEnabled(false);
 	}
 	
 	private FileChooser createFileChoose() {

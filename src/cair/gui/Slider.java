@@ -10,8 +10,8 @@ public class Slider extends JSlider {
 		setMinimum(0);
 		setMaximum(50);
 		setValue(10);
-		setPaintTicks(true);
-		setPaintLabels(true);
+		setPaintTicks(false);
+		setPaintLabels(false);
 		setMinorTickSpacing(1);
 		setMajorTickSpacing(10);
 	}
